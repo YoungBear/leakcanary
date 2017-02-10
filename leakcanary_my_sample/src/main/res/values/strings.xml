@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">leakcanary_my_sample</string>
+    <string name="official_demo">leakcanary官方Demo</string>
+
+    <string name="official_demo_start_async_task">Start new AsyncTask</string>
+    <string name="official_demo_helper_text">Start the async task, <b>rotate the screen</b> and wait for a bit. A
+    wild notification appears.</string>
+</resources>
