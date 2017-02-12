@@ -16,14 +16,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="@string/official_demo_helper_text"
-        />
+        android:text="@string/official_demo_helper_text"/>
 
     <Button
         android:id="@+id/async_task"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/official_demo_start_async_task"
-        />
+        android:text="@string/official_demo_start_async_task"/>
+
+    <Button
+        android:id="@+id/btn_async_task_safely"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/official_demo_start_async_task_safely"/>
 
 </LinearLayout>

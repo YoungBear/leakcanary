@@ -1,59 +1,67 @@
-# LeakCanary
+# 使用LeakCanary 分析常见内存泄漏问题
 
-A memory leak detection library for Android and Java.
+## 1. LeakCanary官方Demo
 
-*“A small leak will sink a great ship.”* - Benjamin Franklin
+即在Activity中启动一个AsyncTask,但是如果屏幕翻转，Activity声明周期会重新执行，但是由于AsyncTask任务中尚未执行完成，<font color=red>匿名类持有Activity的强引用</font>，导致前一个Activity的资源不能回收，造成了内存泄漏。
 
-![screenshot.png](assets/screenshot.png)
+内存泄漏代码：
 
-## Getting started
-
-In your `build.gradle`:
-
-```gradle
- dependencies {
-   debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5'
-   releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
-   testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
- }
+```
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                // Do some slow work in background
+                SystemClock.sleep(20000);
+                return null;
+            }
+        }.execute();
 ```
 
-In your `Application` class:
+//todo 插入official_demo.png图片
 
-```java
-public class ExampleApplication extends Application {
+解决方案：使用静态内部类，保存一个Activity的弱引用。因为静态的内部类不会持有外部类的引用，所以不会导致外部类实例的内存泄露。当你需要在静态内部类中调用外部的Activity时，我们可以使用弱引用来处理。
 
-  @Override public void onCreate() {
-    super.onCreate();
-    if (LeakCanary.isInAnalyzerProcess(this)) {
-      // This process is dedicated to LeakCanary for heap analysis.
-      // You should not init your app in this process.
-      return;
+```
+    void startAsyncTaskSafely() {
+        new TestAsyncTask(this).execute();
     }
-    LeakCanary.install(this);
-    // Normal app init code...
-  }
-}
+
+    private static class TestAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        private WeakReference<OfficialDemoActivity> mWeakReference;
+
+        public TestAsyncTask(OfficialDemoActivity activity) {
+            super();
+            mWeakReference = new WeakReference<OfficialDemoActivity>(activity);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            OfficialDemoActivity activity = mWeakReference.get();
+            if (activity != null) {
+                SystemClock.sleep(20000);
+            }
+            return null;
+        }
+    }
 ```
 
-**You're good to go!** LeakCanary will automatically show a notification when an activity memory leak is detected in your debug build.
+## 2. 静态组件(如TextView)
 
-Questions? Check out [the FAQ](https://github.com/square/leakcanary/wiki/FAQ)!
+```
+    private static TextView mTextView;
 
-![icon_512.png](assets/icon_512.png)
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_static_text_view);
+        mTextView = (TextView) findViewById(R.id.txt_static);
+    }
+```
 
-## License
+由于静态TextView会持有Activitiy的强引用，所以在Activity生命周期结束后，资源并没有释放，引起内存泄漏。
 
-    Copyright 2015 Square, Inc.
+解决方案：不要使用静态组件。
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.

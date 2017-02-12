@@ -20,6 +20,10 @@
             android:name=".activity.OfficialDemoActivity"
             android:label="@string/official_demo">
         </activity>
+        <activity
+            android:name=".activity.StaticTextViewActivity"
+            android:label="@string/static_text_view">
+        </activity>
     </application>
 
 </manifest>
